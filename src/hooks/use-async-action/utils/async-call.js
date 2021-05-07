@@ -1,17 +1,26 @@
-import axios from '../../../utils/axios';
+import axios from './axios';
 
-const asyncCall = async (config) => {
+const asyncCall = async (config, setAlerts) => {
   const { accessToken, addingHeaders, ...confingProps } = config;
 
-  const { data } = await axios({
-    ...confingProps,
-    headers: {
-      ...addingHeaders,
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  try {
+    const { data } = await axios({
+      ...confingProps,
+      headers: {
+        ...addingHeaders,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return data;
+  } catch (error) {
+    const {
+      response: { data, status },
+    } = error;
 
-  return data;
+    setAlerts((alerts) => [...alerts, { message: data.message, status }]);
+
+    return null;
+  }
 };
 
 export default asyncCall;

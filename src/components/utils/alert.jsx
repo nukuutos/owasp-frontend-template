@@ -1,34 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { deleteAlert } from '../../redux/alert/actions';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useState, useRef } from 'react';
 
-const Alert = () => {
-  const alerts = useSelector((state) => state.alerts);
-  const dispatch = useDispatch();
+const Alert = ({ alertsState }) => {
+  const [alerts, setAlerts] = alertsState;
+  const [isShow, setIsShow] = useState(false);
 
-  const [{ isShow, isHidden }, setState] = useState({ isShow: false, isHidden: true });
-
-  const popUpAnimationDuration = 2000;
-  const alertAnimationDuration = 2000;
-
-  const animationDuration = alertAnimationDuration + popUpAnimationDuration;
+  const isShowRef = useRef();
+  isShowRef.current = isShow;
 
   useEffect(() => {
-    if (alerts.length && isHidden === true) {
-      setState({ isHidden: false, isShow: true });
+    const popUpAnimationDuration = 2000;
+    const alertAnimationDuration = 2000;
+
+    const animationDuration = alertAnimationDuration + popUpAnimationDuration;
+
+    if (alerts.length && !isShowRef.current) {
+      setIsShow(true);
 
       setTimeout(() => {
-        setState((state) => ({ ...state, isShow: false }));
+        setIsShow(false);
       }, alertAnimationDuration);
 
       setTimeout(() => {
-        setState((state) => ({ ...state, isHidden: true }));
-        dispatch(deleteAlert());
+        setAlerts(([firstAlert, ...alerts]) => alerts);
       }, animationDuration);
     }
 
     // without cleanup function!
-  }, [alerts.length]);
+  }, [alerts.length, setAlerts]);
 
   // for animation not using {alerts[0] && component}
 
@@ -36,17 +34,17 @@ const Alert = () => {
   // className = type === 'success' ? 'alert--success' : 'alert--fail'
   // e.g. success alert, time is up, alert becomes fail (alert does not hidding in time)
 
-  let message, type;
+  let message, status;
   const alert = alerts[0];
-  if (alert) ({ message, type } = alert);
+  if (alert) ({ message, status } = alert);
 
   return (
     <>
-      <div className={`alert ${alert && type === 'success' && isShow ? 'alert--show' : ''} alert--success`}>
+      <div className={`alert ${alert && status === 200 && isShow ? 'alert--show' : ''} alert--success`}>
         {alert && message}
       </div>
 
-      <div className={`alert ${alert && type === 'fail' && isShow ? 'alert--show' : ''} alert--fail`}>
+      <div className={`alert ${alert && status !== 200 && isShow ? 'alert--show' : ''} alert--fail`}>
         {alert && message}
       </div>
     </>
